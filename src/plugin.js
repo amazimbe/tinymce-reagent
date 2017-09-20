@@ -1,13 +1,11 @@
 import Handlebars from 'handlebars';
-import Widget from './widget';
 
 const plugin = (editor) => {
-  const widget = new Widget({
-    editor: editor,
-    elementClass: 'reagent',
-    html: '<span class="widget reagent">{{selection}}</span>',
+  editor.addButton('reagent', {
+    tooltip: 'Reagent',
+    icon: 'reagent',
 
-    default: (html) => {
+    onclick() {
       let window = editor.windowManager.open({
         height: 112,
         width: 460,
@@ -16,12 +14,12 @@ const plugin = (editor) => {
         buttons: [{
           text: 'Ok',
           classes: 'widget btn primary',
-          onclick: function() {
+          onclick() {
             window.submit();
           }
         }, {
           text: 'Cancel',
-          onclick: function() {
+          onclick() {
             window.close();
           }
         }],
@@ -32,10 +30,9 @@ const plugin = (editor) => {
           label: 'Select reagent'
         }],
 
-        onsubmit: function(e) {
+        onsubmit(e) {
           let value = e.data.reagent;
-          html = html.replace('{{selection}}', value) + '&nbsp;';
-          editor.insertContent(html);
+          editor.insertContent(`<span class="widget reagent">${value}</span>&nbsp;`);
         }
       });
 
@@ -43,7 +40,7 @@ const plugin = (editor) => {
       let input = $(modal.find('input.mce-textbox').get(0));
 
       $.each(input.parents('.mce-container-body'), (index, item) => {
-        return $(item).css('overflow', 'inherit');
+        $(item).css('overflow', 'inherit');
       });
 
       input.css('left', 0);
@@ -52,37 +49,24 @@ const plugin = (editor) => {
       input.typeahead({
         minLength: 1
       }, {
-        displayKey: 'title',
+        display: 'title',
         templates: {
-          suggestion: Handlebars.compile(['<span class="reagent">{{title}}</span> ', '<span class="in">in</span> ', '<span class="inventory">{{inventory}}</span>'].join(''))
+          empty: ['<span class="reagent">', 'Unable to find any reagents that match the query', '</span>'].join('\n'),
+          suggestion: Handlebars.compile('<div><span class="reagent">{{title}}</span><span class="in">&nbsp;in</span><span class="inventory">&nbsp;{{inventory}}</span></div>')
         },
-        source: (query, callback) => {
+        source(query, syncCallback, asyncCallback) {
           let regex = new RegExp(query, 'im');
-          return editor.settings.store.findAll('inventory').then(() => {
-            return editor.settings.store.findAll('reagent').then(reagents => {
-              reagents = reagents.filter(reagent => {
-                return regex.test(reagent.get('title')) && !reagent.get('archived');
-              }).map(reagent => {
-                return {
-                  id: reagent.get('id'),
-                  title: reagent.get('title'),
-                  inventory: reagent.get('inventory.title')
-                };
-              });
-              return callback(reagents);
+          let params = { include: 'inventories', reload: true };
+          editor.settings.store.findAll('reagent', params).then(reagents => {
+            reagents = reagents.filter(reagent => {
+              return regex.test(reagent.get('title')) && !reagent.get('archived');
+            }).map(reagent => {
+              return { id: reagent.get('id'), title: reagent.get('title'), inventory: reagent.get('inventory.title') };
             });
+            asyncCallback(reagents);
           });
         }
       });
-    }
-  });
-
-  editor.addButton('reagent', {
-    tooltip: 'Reagent',
-    icon: 'reagent',
-    text: 'reagent',
-    onclick: () => {
-      widget.insertContent();
     }
   });
 };

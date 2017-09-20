@@ -9,6 +9,14 @@ module.exports = {
     'plugin': './src/index.js',
     'plugin.min': './src/index.js'
   },
+  node: {
+    fs: 'empty'
+  },
+  resolve: {
+    alias: {
+      handlebars: 'handlebars/dist/handlebars.min.js'
+    }
+  },
   output: {
     path: path.join(__dirname, '../dist', pluginName),
     filename: '[name].js'
