@@ -56,7 +56,7 @@ const plugin = (editor) => {
         },
         source(query, syncCallback, asyncCallback) {
           let regex = new RegExp(query, 'im');
-          let params = { include: 'inventories', reload: true };
+          let params = { include: 'inventory', reload: true };
           editor.settings.store.findAll('reagent', params).then(reagents => {
             reagents = reagents.filter(reagent => {
               return regex.test(reagent.get('title')) && !reagent.get('archived');
