@@ -36,10 +36,8 @@ const plugin = (editor) => {
         }
       });
 
-      let modal = $('#' + window._id);
-      let input = $(modal.find('input.mce-textbox').get(0));
-
-      $.each(input.parents('.mce-container-body'), (index, item) => {
+      let input = $(`#${window._id} input.mce-textbox:first`);
+      $.each(input.parents('.mce-container-body'), (_index, item) => {
         $(item).css('overflow', 'inherit');
       });
 
